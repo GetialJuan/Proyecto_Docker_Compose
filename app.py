@@ -1,23 +1,26 @@
 import time
 
-import redis
 from flask import Flask
+import psycopg2
+
+intento = True
+while intento:
+    try:
+        conn = psycopg2.connect(database="postgres",
+                                user="postgres",
+                                password="postgres",
+                                host="postgres",
+                                port="5432")
+        intento = False
+        print("Database connected successfully")
+    except:
+        print("Database NOT connected successfully")
+        intento = True
 
 app = Flask(__name__)
-cache = redis.Redis(host='redis', port=6379)
-
-def get_hit_count():
-    retries = 5
-    while True:
-        try:
-            return cache.incr('hits')
-        except redis.exceptions.ConnectionError as exc:
-            if retries == 0:
-                raise exc
-            retries -= 1
-            time.sleep(0.5)
+db = conn.cursor()
 
 @app.route('/')
 def hello():
-    count = get_hit_count()
-    return 'Hello World! I have been seen {} times.\n'.format(count)
+    db.execute("SELECT * FROM contador")
+    return 'Contador: {}'.format(db.fetchone())
