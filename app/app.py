@@ -16,7 +16,6 @@ db = connection.cursor()
 
 @app.route('/', methods = ['GET'])
 def get_counter():
-    db.execute("UPDATE counter SET value  = (value + 1)")
     db.execute("SELECT * FROM counter")
     return 'Counter: {}'.format(db.fetchone()[0]) # Showing the counter
 
@@ -38,11 +37,7 @@ def update_counter(value):
 
 @app.route('/', methods = ['POST'])
 def add_counter():
-    counter_value = request.json['counter'] # Getting the new counter value
+    counter_value = request.json['counter'] # Getting the new counter value from the json received
     db.execute("DELETE FROM counter") # Deleting the actual counter
     db.execute("INSERT INTO counter VALUES ({})".format(counter_value)) # Adding the new counter (a counter with the specified value)
-    return jsonify({'contador': counter_value})
-
-
-if __name__ == "__main__":
-    app.run()
+    return jsonify({'counter': counter_value})
