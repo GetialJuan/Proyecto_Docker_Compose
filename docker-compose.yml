@@ -6,6 +6,10 @@ services:
       dockerfile: app.Dockerfile
     ports:
       - "8000:5000"
+    volumes:
+      - ./app:/code
+    environment:
+      FLASK_DEBUG: True
     depends_on:
       postgres:
         condition: service_healthy

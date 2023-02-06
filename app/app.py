@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 import psycopg2
 
 try:
@@ -24,20 +24,32 @@ def delete_counter():
     try:
         db.execute("DELETE FROM counter") # Deleting the actual counter
         db.execute("INSERT INTO counter VALUES (0)") # Inserting a new counter with 0 in its value
-        return jsonify({'result': True})
+        return jsonify({'change': True})
     except:
         connection.rollback() # Setting the previous state
-        return jsonify({'result': False})
+        return jsonify({'change': False})
 
 @app.route('/<int:value>', methods = ['PUT'])
 def update_counter(value):
-    db.execute("UPDATE counter SET value = {}".format(value)) # Updating the counter value
-    db.execute("SELECT * FROM contador")
-    return jsonify({'contador': db.fetchone()[0]})
+    try:
+        db.execute("UPDATE counter SET value = {}".format(value)) # Updating the counter value
+        db.execute("SELECT * FROM counter")
+        return jsonify({'contador': db.fetchone()[0]})
+    except:
+        connection.rollback()
+        return jsonify({'change': False})
 
 @app.route('/', methods = ['POST'])
 def add_counter():
-    counter_value = request.json['counter'] # Getting the new counter value from the json received
-    db.execute("DELETE FROM counter") # Deleting the actual counter
-    db.execute("INSERT INTO counter VALUES ({})".format(counter_value)) # Adding the new counter (a counter with the specified value)
-    return jsonify({'counter': counter_value})
+
+    if not request.json:
+        abort(400)
+
+    try:
+        counter_value = request.json['counter'] # Getting the new counter value from the json received
+        db.execute("DELETE FROM counter") # Deleting the actual counter
+        db.execute("INSERT INTO counter VALUES ({})".format(counter_value)) # Adding the new counter (a counter with the specified value)
+        return jsonify({'counter': counter_value})
+    except:
+        connection.rollback()
+        return jsonify({'change': False})
